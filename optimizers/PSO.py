@@ -64,12 +64,17 @@ class PSO:
         :param ub:
         :param int_idx:
         """
+        # the function used for the evaluation (callable)
         self.fcn = fcn
+        # the dimension of the optimization problem
         self.dim = len(lb)
+        # The indexes of integers
         self.int_idx = int_idx
+        # building mask indexing for continuous and discrete variables
         self.continuous_mask = np.ones((self.dim,), dtype=bool)
         self.continuous_mask[self.int_idx] = False
         self.discrete_mask = ~self.continuous_mask
+
         self.num_particles = num_particles
         self.max_iter = max_iter
         self.inertia_weight = inertia_weight
