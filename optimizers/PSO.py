@@ -98,12 +98,13 @@ class PSO:
 
         # initializing the track of metrics & positions & velocities
         self.metric_track = np.ones((self.num_particles, self.max_iter)) * np.inf
-        self.positions = np.zeros((self.dim, self.num_particles,))
+        self.positions = np.zeros((self.dim, self.num_particles,1))
         self.positions[:, :, 0:1] = (np.random.uniform(low=0, high=1, size=(self.dim, self.num_particles)) * (
                 self.ub - self.lb) + self.lb)[:, :, np.newaxis]
         self.positions[self.discrete_mask, :, 0:1] = np.round(self.positions[self.discrete_mask, :, 0:1])
-        self.positions = np.minimum(np.maximum(self.positions[:, :, 0], self.lb), self.ub)[:, :, np.newaxis]
+
         self.velocities = np.zeros((self.dim, self.num_particles, self.max_iter))
+        self.positions = np.minimum(np.maximum(self.positions[:, :, 0], self.lb), self.ub)[:, :, np.newaxis]
 
         # the current values of metrics of all particles
         self.metric_current = np.ones((1, self.num_particles)) * np.inf
@@ -112,10 +113,17 @@ class PSO:
 
         # initializing best values of parameters (positions)
         self.global_best = np.tile(A=self.positions[:, 0, 0].reshape((-1, 1)), reps=(1, self.num_particles))
-        self.local_best = self.positions[:, :, 0]
+        self.local_best_position = self.positions[:, :, 0]
 
-    def get_best_values(self):
-        self.metric_best_locals = self.metric_current[self.metric_current < self.metric_best_locals]
+    def bounding_positions(self):
+        ...
+        return
+
+    def get_best_values(self, i):
+        best_local_index = self.metric_current < self.metric_best_locals
+        self.metric_best_locals = self.metric_current[best_local_index]
+        self.local_best_position = self.positions[:, best_local_index[0,:], i]
+
         min_index = self.metric_current.argmin(axis=1)
         if self.metric_current[0, min_index] < self.gbest_value: self.gbest_value = self.metric_current[0, min_index]
 
@@ -124,7 +132,7 @@ class PSO:
     def run(self):
         for i in range(self.max_iter):
             self.metric_current = self.fcn(self.positions[:, :, i])
-            self.get_best_values()
+            self.get_best_values(i)
 
 
 if __name__ == "__main__":
