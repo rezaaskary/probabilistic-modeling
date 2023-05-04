@@ -98,7 +98,7 @@ class PSO:
 
         # initializing the track of metrics & positions & velocities
         self.metric_track = np.ones((self.num_particles, self.max_iter)) * np.inf
-        self.positions = np.zeros((self.dim, self.num_particles,1))
+        self.positions = np.zeros((self.dim, self.num_particles, 1))
         self.positions[:, :, 0:1] = (np.random.uniform(low=0, high=1, size=(self.dim, self.num_particles)) * (
                 self.ub - self.lb) + self.lb)[:, :, np.newaxis]
         self.positions[self.discrete_mask, :, 0:1] = np.round(self.positions[self.discrete_mask, :, 0:1])
@@ -109,10 +109,10 @@ class PSO:
         # the current values of metrics of all particles
         self.metric_current = np.ones((1, self.num_particles)) * np.inf
         # best obtained metric
-        self.gbest_value = np.inf
+        self.metric_best_global = np.inf
 
         # initializing best values of parameters (positions)
-        self.global_best = np.tile(A=self.positions[:, 0, 0].reshape((-1, 1)), reps=(1, self.num_particles))
+        self.global_best_position = np.tile(A=self.positions[:, 0, 0].reshape((-1, 1)), reps=(1, self.num_particles))
         self.local_best_position = self.positions[:, :, 0]
 
     def bounding_positions(self):
@@ -122,10 +122,13 @@ class PSO:
     def get_best_values(self, i):
         best_local_index = self.metric_current < self.metric_best_locals
         self.metric_best_locals = self.metric_current[best_local_index]
-        self.local_best_position = self.positions[:, best_local_index[0,:], i]
+        self.local_best_position = self.positions[:, best_local_index[0, :], i]
 
         min_index = self.metric_current.argmin(axis=1)
-        if self.metric_current[0, min_index] < self.gbest_value: self.gbest_value = self.metric_current[0, min_index]
+        if self.metric_current[0, min_index] < self.metric_best_global:
+            self.metric_best_global = self.metric_current[0, min_index]
+
+
 
         return
 
@@ -133,7 +136,7 @@ class PSO:
         for i in range(self.max_iter):
             self.metric_current = self.fcn(self.positions[:, :, i])
             self.get_best_values(i)
-
+            self.velocities[:, :, i] =
 
 if __name__ == "__main__":
     d = PSO(fcn=f, max_iter=1000, num_particles=45, inertia_weight=0.5, cognitive_weight=1, social_weight=2.0, V_max=10)
