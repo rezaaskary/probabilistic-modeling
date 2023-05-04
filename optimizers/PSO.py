@@ -44,8 +44,6 @@ def input_checker(func):
         if not isinstance(V_max, float):
             Exception(f'The value of {V_max} is incorrect')
         return func(fcn, num_particles, max_iter, inertia_weight, cognitive_weight, social_weight, V_max, lb, ub, int_idx)
-
-
     return wrapper
 
 
@@ -53,7 +51,19 @@ def input_checker(func):
 class PSO:
     def __init__(self, fcn, num_particles, max_iter, inertia_weight,
                  cognitive_weight, social_weight, V_max, lb, ub, int_idx):
+        """
 
+        :param fcn:
+        :param num_particles:
+        :param max_iter:
+        :param inertia_weight:
+        :param cognitive_weight:
+        :param social_weight:
+        :param V_max:
+        :param lb:
+        :param ub:
+        :param int_idx:
+        """
         self.fcn = fcn
         self.dim = len(lb)
         self.int_idx = int_idx
@@ -68,7 +78,7 @@ class PSO:
         self.V_max = V_max
         self.lb = np.tile(A=np.array(lb).reshape((-1, 1)), reps=(1, self.num_particles))
         self.ub = np.tile(A=np.array(ub).reshape((-1, 1)), reps=(1, self.num_particles))
-        self.metric_best_locals = np.ones((1, self.num_particles)) * np.inf
+        self.metric_best_locals = np.ones(( self.num_particles,)) * np.inf
         self.metric_track = np.ones((self.num_particles, self.max_iter)) * np.inf
         self.metric_current = np.ones((1, self.num_particles)) * np.inf
         self.gbest_value = np.inf
@@ -83,7 +93,7 @@ class PSO:
         self.local_best = self.positions[:, :, 0:1]
 
     def get_best_values(self):
-        self.metric_best_locals = self.metric_current[:, self.metric_current < self.metric_best_locals]
+        self.metric_best_locals = self.metric_current[self.metric_current < self.metric_best_locals]
         min_index = self.metric_current.argmin(axis=1)
         if self.metric_current[0, min_index] < self.gbest_value: self.gbest_value = self.metric_current[0, min_index]
 
@@ -92,7 +102,7 @@ class PSO:
     def run(self):
         for i in range(self.max_iter):
             self.metric_current = self.fcn(self.positions[:, :, i])
-
+            self.get_best_values()
 
 if __name__ == "__main__":
     d = PSO(fcn=f, max_iter=1000,num_particles=45, inertia_weight=0.5, cognitive_weight=1, social_weight=2.0, V_max=10)
