@@ -146,6 +146,8 @@ class PSO:
         for self.i in range(self.max_iter - 1):
             self.metric_current = self.fcn(self.positions[:, :, self.i])
             self.get_best_values()
+            self.update_positions()
+
 
 
 if __name__ == "__main__":
