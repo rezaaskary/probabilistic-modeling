@@ -119,24 +119,34 @@ class PSO:
         ...
         return
 
-    def get_best_values(self, i):
+    def get_best_values(self):
         best_local_index = self.metric_current < self.metric_best_locals
         self.metric_best_locals = self.metric_current[best_local_index]
-        self.local_best_position = self.positions[:, best_local_index[0, :], i]
+        self.local_best_position = self.positions[:, best_local_index[0, :], self.i]
 
         min_index = self.metric_current.argmin(axis=1)
         if self.metric_current[0, min_index] < self.metric_best_global:
             self.metric_best_global = self.metric_current[0, min_index]
-            self.global_best_position = self.positions[:, min_index, i]
+            self.global_best_position = self.positions[:, min_index, self.i]
+        return
 
-
+    def update_positions(self):
+        inertial_velocity = self.inertia_weight * self.velocities[:, :, self.i:self.i + 1]
+        cognitive_velocity = self.cognitive_weight * \
+                             self.velocities[:, :, self.i:self.i + 1] * \
+                             np.random.uniform(low=0, high=1, size=(self.dim, self.num_particles, 1))
+        social_velocity = self.social_weight * \
+                          self.velocities[:, :, self.i:self.i + 1] * \
+                          np.random.uniform(low=0, high=1, size=(self.dim, self.num_particles, 1))
+        self.velocities[:, :, self.i + 1:self.i + 2] = inertial_velocity + cognitive_velocity + social_velocity
+        self.positions[:, :, self.i + 1:self.i + 2] = self.positions[:, :, self.i:self.i + 1] + self.velocities[:, :, self.i:self.i + 1]
         return
 
     def run(self):
-        for i in range(self.max_iter-1):
-            self.metric_current = self.fcn(self.positions[:, :, i])
-            self.get_best_values(i)
-            self.velocities[:, :, i+1:i+2] = self.inertia_weight * self.velocities[:, :, i:i+1] +
+        for self.i in range(self.max_iter - 1):
+            self.metric_current = self.fcn(self.positions[:, :, self.i])
+            self.get_best_values()
+
 
 if __name__ == "__main__":
     d = PSO(fcn=f, max_iter=1000, num_particles=45, inertia_weight=0.5, cognitive_weight=1, social_weight=2.0, V_max=10)
