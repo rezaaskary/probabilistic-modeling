@@ -43,7 +43,8 @@ def input_checker(func):
 
         if not isinstance(V_max, float):
             Exception(f'The value of {V_max} is incorrect')
-        return func(fcn, num_particles, max_iter, inertia_weight, cognitive_weight, social_weight, V_max, lb, ub)
+        return func(fcn, num_particles, max_iter, inertia_weight, cognitive_weight, social_weight, V_max, lb, ub, int_idx)
+
 
     return wrapper
 
