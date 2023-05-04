@@ -29,6 +29,10 @@ def input_checker(func):
                 lb: list = [0, 1, 1, 1, 1, 2],
                 ub: list = [0, 1, 1, 1, 10, 7],
                 int_idx: list = [4, 5]):
+
+        lb = np.tile(A=np.array(lb).reshape((-1, 1)), reps=(1, num_particles))
+        ub = np.tile(A=np.array(ub).reshape((-1, 1)), reps=(1, num_particles))
+
         if not isinstance(num_particles, int):
             Exception(f'The value of {num_particles} is incorrect')
 
@@ -43,7 +47,9 @@ def input_checker(func):
 
         if not isinstance(V_max, float):
             Exception(f'The value of {V_max} is incorrect')
-        return func(fcn, num_particles, max_iter, inertia_weight, cognitive_weight, social_weight, V_max, lb, ub, int_idx)
+        return func(fcn, num_particles, max_iter, inertia_weight, cognitive_weight, social_weight, V_max, lb, ub,
+                    int_idx)
+
     return wrapper
 
 
@@ -74,28 +80,39 @@ class PSO:
         self.continuous_mask = np.ones((self.dim,), dtype=bool)
         self.continuous_mask[self.int_idx] = False
         self.discrete_mask = ~self.continuous_mask
-
+        # initializing the number of particles and iterations
         self.num_particles = num_particles
         self.max_iter = max_iter
+        # initializing searching weights & maximum velocity of movement
         self.inertia_weight = inertia_weight
         self.cognitive_weight = cognitive_weight
         self.social_weight = social_weight
         self.V_max = V_max
-        self.lb = np.tile(A=np.array(lb).reshape((-1, 1)), reps=(1, self.num_particles))
-        self.ub = np.tile(A=np.array(ub).reshape((-1, 1)), reps=(1, self.num_particles))
-        self.metric_best_locals = np.ones(( self.num_particles,)) * np.inf
+        # initializing the lower and upper bound of parameters (dim x particles)
+        self.lb = lb
+        self.ub = ub
+
+        # initialization of the best metric value of each particle & parameters
+        self.metric_best_locals = np.ones((self.num_particles,)) * np.inf  # (particles)
+        self.param_best_locals = np.ones((self.dim, self.num_particles)) * np.inf  # (dim x particles)
+
+        # initializing the track of metrics & positions & velocities
         self.metric_track = np.ones((self.num_particles, self.max_iter)) * np.inf
-        self.metric_current = np.ones((1, self.num_particles)) * np.inf
-        self.gbest_value = np.inf
-        self.positions = np.zeros((self.dim, self.num_particles, self.max_iter))
-        self.velocities = np.zeros((self.dim, self.num_particles, num_dimensions))
+        self.positions = np.zeros((self.dim, self.num_particles,))
         self.positions[:, :, 0:1] = (np.random.uniform(low=0, high=1, size=(self.dim, self.num_particles)) * (
                 self.ub - self.lb) + self.lb)[:, :, np.newaxis]
-
         self.positions[self.discrete_mask, :, 0:1] = np.round(self.positions[self.discrete_mask, :, 0:1])
         self.positions = np.minimum(np.maximum(self.positions[:, :, 0], self.lb), self.ub)[:, :, np.newaxis]
-        self.global_best = np.tile(A=self.positions[:, 0, 0].reshape((-1, 1, 1)), reps=(1, self.num_particles, 1))
-        self.local_best = self.positions[:, :, 0:1]
+        self.velocities = np.zeros((self.dim, self.num_particles, self.max_iter))
+
+        # the current values of metrics of all particles
+        self.metric_current = np.ones((1, self.num_particles)) * np.inf
+        # best obtained metric
+        self.gbest_value = np.inf
+
+        # initializing best values of parameters (positions)
+        self.global_best = np.tile(A=self.positions[:, 0, 0].reshape((-1, 1)), reps=(1, self.num_particles))
+        self.local_best = self.positions[:, :, 0]
 
     def get_best_values(self):
         self.metric_best_locals = self.metric_current[self.metric_current < self.metric_best_locals]
@@ -109,6 +126,7 @@ class PSO:
             self.metric_current = self.fcn(self.positions[:, :, i])
             self.get_best_values()
 
+
 if __name__ == "__main__":
-    d = PSO(fcn=f, max_iter=1000,num_particles=45, inertia_weight=0.5, cognitive_weight=1, social_weight=2.0, V_max=10)
+    d = PSO(fcn=f, max_iter=1000, num_particles=45, inertia_weight=0.5, cognitive_weight=1, social_weight=2.0, V_max=10)
     d.run()
