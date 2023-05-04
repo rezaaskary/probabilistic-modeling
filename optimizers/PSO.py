@@ -127,16 +127,16 @@ class PSO:
         min_index = self.metric_current.argmin(axis=1)
         if self.metric_current[0, min_index] < self.metric_best_global:
             self.metric_best_global = self.metric_current[0, min_index]
-
+            self.global_best_position = self.positions[:, min_index, i]
 
 
         return
 
     def run(self):
-        for i in range(self.max_iter):
+        for i in range(self.max_iter-1):
             self.metric_current = self.fcn(self.positions[:, :, i])
             self.get_best_values(i)
-            self.velocities[:, :, i] =
+            self.velocities[:, :, i+1:i+2] = self.inertia_weight * self.velocities[:, :, i:i+1] +
 
 if __name__ == "__main__":
     d = PSO(fcn=f, max_iter=1000, num_particles=45, inertia_weight=0.5, cognitive_weight=1, social_weight=2.0, V_max=10)
